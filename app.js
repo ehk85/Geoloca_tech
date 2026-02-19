@@ -3,106 +3,100 @@ const map = L.map('map').setView([45.75, 4.85], 8);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
   .addTo(map);
 
-let dataComplete = [];
-let zonesSecteurs;
-let zonesTechniciens;
+let zonesLayer;
 let pointsLayer;
-let secteursLayer;
-let techLayer;
+let zonesData;
+let pointsData;
 
-// Chargement de la source complète
-fetch("data/data_geocoded.csv")
-  .then(res => res.json())
-  .then(data => {
-    dataComplete = data;
-    drawPoints(dataComplete);
-    initFilters();
-  });
+const techSelect = document.getElementById("techSelect");
+const zoneSelect = document.getElementById("zoneSelect");
 
-// Charger zones secteurs
-fetch("zones_secteurs.geojson")
-  .then(res => res.json())
-  .then(data => {
-    zonesSecteurs = data;
-  });
-
-// Charger zones techniciens
+// Charger zones
 fetch("output/zones_techniciens.geojson")
   .then(res => res.json())
   .then(data => {
-    zonesTechniciens = data;
-  });
-  
-function drawPoints(data) {
-  if (pointsLayer) map.removeLayer(pointsLayer);
-
-  pointsLayer = L.layerGroup();
-
-  data.forEach(d => {
-    const marker = L.circleMarker(
-      [d.latitude, d.longitude],
-      { radius: 4, color: "red", fillOpacity: 0.8 }
-    );
-
-    marker.bindPopup(`
-      <b>${d["Nom Technicien"]}</b><br>
-      Secteur: ${d["Secteur Inter."]}<br>
-      ${d.Adresse}<br>
-      ${d.Ville}
-    `);
-
-    pointsLayer.addLayer(marker);
+    zonesData = data;
+    populateFilters();
+    drawZones(data.features);
   });
 
-  pointsLayer.addTo(map);
-}
+// Charger points
+fetch("output/points_techniciens.geojson")
+  .then(res => res.json())
+  .then(data => {
+    pointsData = data;
+    drawPoints(data.features);
+  });
 
-function searchTechnicien(name) {
-  const filtered = dataComplete.filter(d =>
-    d["Nom Technicien"].toLowerCase().includes(name.toLowerCase())
-  );
-  drawPoints(filtered);
-}
+function drawZones(features) {
+  if (zonesLayer) map.removeLayer(zonesLayer);
 
-function searchAdresse(text) {
-  const filtered = dataComplete.filter(d =>
-    (d.Adresse + " " + d.Ville).toLowerCase().includes(text.toLowerCase())
-  );
-  drawPoints(filtered);
-}
-
-function filterBySecteur(secteurCode) {
-  const filtered = dataComplete.filter(d =>
-    d["Secteur Inter."] == secteurCode
-  );
-  drawPoints(filtered);
-
-  const secteurZone = zonesSecteurs.features.filter(f =>
-    f.properties.secteur == secteurCode
-  );
-
-  if (secteursLayer) map.removeLayer(secteursLayer);
-
-  secteursLayer = L.geoJSON(secteurZone, {
-    style: { color: "blue", fillOpacity: 0.2 }
+  zonesLayer = L.geoJSON(features, {
+    style: f => ({
+      color: f.properties.couleur,
+      fillOpacity: 0.3,
+      weight: 2
+    })
   }).addTo(map);
 }
 
+function drawPoints(features) {
+  if (pointsLayer) map.removeLayer(pointsLayer);
 
-function showIntersection(tech1, tech2) {
-  const z1 = zonesTechniciens.features.find(f =>
-    f.properties.technicien === tech1
+  pointsLayer = L.geoJSON(features, {
+    pointToLayer: (f, latlng) =>
+      L.circleMarker(latlng, {
+        radius: 4,
+        color: "red",
+        fillOpacity: 0.8
+      })
+  }).addTo(map);
+}
+
+function populateFilters() {
+  const techs = [...new Set(zonesData.features.map(f => f.properties.technicien))];
+  techs.forEach(t => {
+    const option = document.createElement("option");
+    option.value = t;
+    option.textContent = t;
+    techSelect.appendChild(option);
+  });
+
+  const zones = [...new Set(pointsData?.features?.map(f => f.properties.secteur))];
+  zones.forEach(z => {
+    const option = document.createElement("option");
+    option.value = z;
+    option.textContent = z;
+    zoneSelect.appendChild(option);
+  });
+}
+
+techSelect.addEventListener("change", () => {
+  const selected = [...techSelect.selectedOptions].map(o => o.value);
+  const filtered = zonesData.features.filter(f =>
+    selected.includes(f.properties.technicien)
   );
+  drawZones(filtered);
+});
 
-  const z2 = zonesTechniciens.features.find(f =>
-    f.properties.technicien === tech2
-  );
+function showIntersection() {
+  const selected = [...techSelect.selectedOptions].map(o => o.value);
+  if (selected.length !== 2) {
+    alert("Sélectionne exactement 2 techniciens");
+    return;
+  }
 
-  const intersection = turf.intersect(z1, z2);
+  const zone1 = zonesData.features.find(f => f.properties.technicien === selected[0]);
+  const zone2 = zonesData.features.find(f => f.properties.technicien === selected[1]);
+
+  const intersection = turf.intersect(zone1, zone2);
 
   if (intersection) {
     L.geoJSON(intersection, {
-      style: { color: "yellow", fillOpacity: 0.5 }
+      style: {
+        color: "yellow",
+        fillOpacity: 0.6
+      }
     }).addTo(map);
   }
 }
