@@ -1,6 +1,7 @@
 {
 "type": "FeatureCollection",
 "name": "points_techniciens",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
 "features": [
 { "type": "Feature", "properties": { "technicien": "Yann GENIEIS", "secteur": 73 }, "geometry": { "type": "Point", "coordinates": [ 4.7467991, 45.753718 ] } },
 { "type": "Feature", "properties": { "technicien": "Yann GENIEIS", "secteur": 73 }, "geometry": { "type": "Point", "coordinates": [ 4.7658004, 45.6712475 ] } },

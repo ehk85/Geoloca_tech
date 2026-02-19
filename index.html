@@ -2,18 +2,102 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Zones Techniciens</title>
+  <title>Gestion Zones Techniciens</title>
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
   <style>
-    #map { height: 100vh; }
+    body {
+      margin: 0;
+      display: flex;
+      font-family: Arial, sans-serif;
+    }
+
+    #sidebar {
+      width: 350px;
+      background: #1e1e2f;
+      color: white;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    #sidebar h2 {
+      margin-top: 0;
+    }
+
+    #map {
+      flex: 1;
+      height: 100vh;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #4CAF50;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .section {
+      margin-bottom: 25px;
+    }
   </style>
 </head>
+
 <body>
+
+<div id="sidebar">
+
+  <h2>🔎 Recherche</h2>
+
+  <div class="section">
+    <input type="text" id="searchTech" placeholder="Rechercher technicien">
+    <input type="text" id="searchAdresse" placeholder="Rechercher adresse">
+  </div>
+
+  <div class="section">
+    <h3>🎯 Sélection Techniciens</h3>
+    <select id="techSelect" multiple size="6"></select>
+  </div>
+
+  <div class="section">
+    <h3>📍 Sélection Zones</h3>
+    <select id="zoneSelect" multiple size="6"></select>
+  </div>
+
+  <div class="section">
+    <h3>📊 Tri</h3>
+    <button onclick="sortByZone()">Trier par zone</button>
+    <button onclick="sortByVille()">Trier par ville</button>
+  </div>
+
+  <div class="section">
+    <h3>🔗 Intersection</h3>
+    <button onclick="showIntersection()">Afficher intersection</button>
+  </div>
+
+</div>
 
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="script.js"></script>
+<script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
