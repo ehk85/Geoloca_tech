@@ -47,52 +47,56 @@ from shapely.ops import unary_union
 
 # df.to_csv("data\data_geocoded.csv", index=False)
 
-# df = pd.read_csv("data\data_geocoded.csv")
+df = pd.read_csv("data\data_geocoded.csv")
 
-# zone_secteurs = {}
+zone_secteurs = {}
 
-# for secteur, group in df.groupby("Secteur Inter."):
-#     points = MultiPoint(list(zip(group["longitude"], group["latitude"])))
-#     polygon = points.convex_hull
-#     zone_secteurs[secteur] = polygon
-
-
-# zones_techniciens = []
-
-# for tech, group in df.groupby("Nom Technicien"):
-
-#     secteurs = group["Secteur Inter."].unique()
-
-#     polygones = [zone_secteurs[s] for s in secteurs if s in zone_secteurs]
-
-#     zone_finale = unary_union(polygones)
-
-#     couleur = "#%06x" % random.randint(0, 0xFFFFFF)
-
-#     zones_techniciens.append({
-#         "technicien": tech,
-#         "agences": list(group["Agence"].unique()),
-#         "secteurs": list(secteurs),
-#         "couleur": couleur,
-#         "geometry": zone_finale
-#     })
+for secteur, group in df.groupby("Secteur Inter."):
+    points = MultiPoint(list(zip(group["longitude"], group["latitude"])))
+    polygon = points.convex_hull
+    zone_secteurs[secteur] = polygon
 
 
-# gdf = gpd.GeoDataFrame(zones_techniciens)
-# gdf = gdf.set_geometry("geometry")
-# gdf.to_file("output/zones_techniciens.geojson", driver="GeoJSON")
+zones_techniciens = []
 
-# points = []
+for tech, group in df.groupby("Nom Technicien"):
 
-# for _, row in df.iterrows():
-#     points.append({
-#         "technicien": row["Nom Technicien"],
-#         "secteur": row["Secteur Inter."],
-#         "geometry": Point(row["longitude"], row["latitude"])
-#     })
+    secteurs = group["Secteur Inter."].unique()
 
-# gdf_points = gpd.GeoDataFrame(points)
-# gdf_points = gdf_points.set_geometry("geometry")
-# gdf_points.to_file("output/points_techniciens.geojson", driver="GeoJSON")
+    polygones = [zone_secteurs[s] for s in secteurs if s in zone_secteurs]
+
+    zone_finale = unary_union(polygones)
+
+    couleur = "#%06x" % random.randint(0, 0xFFFFFF)
+
+    zones_techniciens.append({
+        "technicien": tech,
+        "agences": list(group["Agence"].unique()),
+        "secteurs": list(secteurs),
+        "couleur": couleur,
+        "geometry": zone_finale
+    })
+
+
+gdf = gpd.GeoDataFrame(zones_techniciens)
+gdf = gdf.set_geometry("geometry")
+gdf = gdf.set_crs(epsg=4326)
+gdf = gdf.to_crs(epsg=4326)
+gdf.to_file("output/zones_techniciens.geojson", driver="GeoJSON")
+
+points = []
+
+for _, row in df.iterrows():
+    points.append({
+        "technicien": row["Nom Technicien"],
+        "secteur": row["Secteur Inter."],
+        "geometry": Point(row["longitude"], row["latitude"])
+    })
+
+gdf_points = gpd.GeoDataFrame(points)
+gdf_points = gdf_points.set_geometry("geometry")
+gdf_points = gdf_points.set_crs(epsg=4326)
+gdf_points = gdf_points.to_crs(epsg=4326)
+gdf_points.to_file("output/points_techniciens.geojson", driver="GeoJSON")
 
 
