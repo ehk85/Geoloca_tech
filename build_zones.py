@@ -8,7 +8,7 @@ from shapely.geometry import MultiPoint, Point
 from shapely.ops import unary_union
 
 
-# df = pd.read_csv("data\data.csv")
+# df = pd.read_csv(r"C:\Users\EmmanuelKONATE\Desktop\Géoloca\data\fontaingenas.csv")
 # df = df.dropna(subset=["Nom Technicien", "Adresse", "Ville"])
 # df["adresse_complete"] = df["Adresse"] + ", " + df["Ville"] + ", France"
 
@@ -51,7 +51,7 @@ df = pd.read_csv("data\data_geocoded.csv")
 
 zone_secteurs = {}
 
-for secteur, group in df.groupby("Secteur Inter."):
+for secteur, group in df.groupby("Nouveau Secteur de Maintenance"):
     points = MultiPoint(list(zip(group["longitude"], group["latitude"])))
     polygon = points.convex_hull
     zone_secteurs[secteur] = polygon
@@ -61,7 +61,7 @@ zones_techniciens = []
 
 for tech, group in df.groupby("Nom Technicien"):
 
-    secteurs = group["Secteur Inter."].unique()
+    secteurs = group["Nouveau Secteur de Maintenance"].unique()
 
     polygones = [zone_secteurs[s] for s in secteurs if s in zone_secteurs]
 
@@ -71,7 +71,6 @@ for tech, group in df.groupby("Nom Technicien"):
 
     zones_techniciens.append({
         "technicien": tech,
-        "agences": list(group["Agence"].unique()),
         "secteurs": list(secteurs),
         "couleur": couleur,
         "geometry": zone_finale
@@ -89,14 +88,14 @@ points = []
 for _, row in df.iterrows():
     points.append({
         "technicien": row["Nom Technicien"],
-        "secteur": row["Secteur Inter."],
+        "secteur": row["Nouveau Secteur de Maintenance"],
         "geometry": Point(row["longitude"], row["latitude"])
     })
 
 gdf_points = gpd.GeoDataFrame(points)
 gdf_points = gdf_points.set_geometry("geometry")
-gdf = gdf.set_crs(epsg=4326)
-gdf = gdf.to_crs(epsg=4326)
+gdf_points = gdf_points.set_crs(epsg=4326)
+gdf_points = gdf_points.to_crs(epsg=4326)
 gdf_points.to_file("output/points_techniciens.geojson", driver="GeoJSON")
 
 
