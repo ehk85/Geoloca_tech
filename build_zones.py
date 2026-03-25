@@ -8,7 +8,7 @@ from shapely.geometry import MultiPoint, Point
 from shapely.ops import unary_union
 
 
-# df = pd.read_csv(r"data\appareil_filtré.csv")
+# df = pd.read_csv(r"C:\Users\EmmanuelKONATE\Desktop\Géoloca\data\fontaingenas.csv")
 # df = df.dropna(subset=["Nom Technicien", "Adresse", "Ville"])
 # df["adresse_complete"] = df["Adresse"] + ", " + df["Ville"] + ", France"
 
@@ -51,7 +51,7 @@ df = pd.read_csv("data\data_geocoded.csv")
 
 zone_secteurs = {}
 
-for secteur, group in df.groupby("Secteur Maint."):
+for secteur, group in df.groupby("Nouveau Secteur de Maintenance"):
     points = MultiPoint(list(zip(group["longitude"], group["latitude"])))
     polygon = points.convex_hull
     zone_secteurs[secteur] = polygon
@@ -61,7 +61,7 @@ zones_techniciens = []
 
 for tech, group in df.groupby("Nom Technicien"):
 
-    secteurs = group["Secteur Maint."].unique()
+    secteurs = group["Nouveau Secteur de Maintenance"].unique()
 
     polygones = [zone_secteurs[s] for s in secteurs if s in zone_secteurs]
 
@@ -88,7 +88,7 @@ points = []
 for _, row in df.iterrows():
     points.append({
         "technicien": row["Nom Technicien"],
-        "secteur": row["Secteur Maint."],
+        "secteur": row["Nouveau Secteur de Maintenance"],
         "geometry": Point(row["longitude"], row["latitude"])
     })
 
